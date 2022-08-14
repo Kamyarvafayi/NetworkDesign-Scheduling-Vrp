@@ -1,0 +1,104 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+# In[]: Set Covering
+class Covering_Optimized_Sa:
+    def __init__(self, Iteration = 2000, Temp = 100, Temp_Coeff = 0.98):
+        self.Iter_Num = Iteration
+        self.Temp = Temp
+        self.Temp_Coeff = Temp_Coeff
+        
+    def Initial_Solution(self):
+        self.First_solution = np.random.randint(0,2,size=self.candid.shape[0])
+        self.First_solution = np.ones(shape = self.candid.shape[0])
+    def Find_Distance(self):
+        self.Distance = np.array([[np.linalg.norm(self.candid[j]-self.Input[i]) for i in range(self.Input.shape[0])] for j in range(self.candid.shape[0])])
+    def Swap(self, Solution):
+        Swap_Indices = random.sample(range(Solution.shape[0]), 2)
+        Swap_Indices.sort()
+        Temporary_Var = Solution[Swap_Indices[0]]
+        Solution[Swap_Indices[0]] = Solution[Swap_Indices[1]]
+        Solution[Swap_Indices[1]] = Temporary_Var
+        return Solution
+    def Change(self, Solution):
+        Change_Index = random.sample(range(Solution.shape[0]), 1)
+        if Solution[Change_Index] == 0:
+            Solution[Change_Index] = 1
+        else:
+            Solution[Change_Index] =0
+        return Solution
+    def Reverse(self, Solution):
+        Reverse_Indices = random.sample(range(Solution.shape[0]), 2)
+        Reverse_Indices.sort()
+        Reversed_Part = np.flip(Solution[Reverse_Indices[0]:Reverse_Indices[1]])
+        Solution[Reverse_Indices[0]:Reverse_Indices[1]] = Reversed_Part
+        return Solution
+    def Find_Objective_Function (self, Solution):
+        Facility_Estabilishment_cost = self.Est_Cost * np.sum(Solution)
+        Covered = np.array([False for i in range(self.Input.shape[0])])
+        for Candid_Loc in range(self.candid.shape[0]):
+            if Solution[Candid_Loc] == 1:
+                for customer in range(self.Input.shape[0]):
+                    if self.Distance[Candid_Loc,customer]<=self.Min_Dist:
+                        Covered[customer] = True
+        
+        Uncovered_Customers_Count = np.count_nonzero(np.where(Covered ==True, 0,1))
+        return Facility_Estabilishment_cost + self.Noncovering_Cost * Uncovered_Customers_Count
+    def Fit_covering_Sa(self, Input, Candid_Points, Noncovering_Cost = 100000, Est_Cost = 100,  min_dist = 3):
+        self.Input = Input
+        self.candid = Candid_Points
+        self.Noncovering_Cost = Noncovering_Cost
+        self.Est_Cost = Est_Cost
+        self.Min_Dist = min_dist
+        self.Find_Distance()
+        self.Initial_Solution()
+        self.Best_Obj = self.Objectives = np.array([self.Find_Objective_Function(self.First_solution)])
+        self.Best_Sol = self.First_solution.copy()
+        while self.Temp>=1:
+            for iteration in range(self.Iter_Num):
+                rand = np.random.rand()
+                if rand <0.1:
+                    candid_Solution = self.Swap(self.Best_Sol.copy())
+                elif rand<0.7:
+                    candid_Solution = self.Change(self.Best_Sol.copy())
+                else:
+                    candid_Solution = self.Reverse(self.Best_Sol.copy())
+                
+                if self.Find_Objective_Function(candid_Solution) <= self.Best_Obj:
+                    self.Best_Sol = candid_Solution
+                    self.Best_Obj = self.Find_Objective_Function(candid_Solution)
+                    self.Objectives = np.append(self.Objectives, np.array([self.Best_Obj]))
+                else:
+                    DeltaObjective = self.Find_Objective_Function(self.Best_Sol)- self.Find_Objective_Function(candid_Solution)
+                    rand2 = np.random.uniform(0,1)
+                    if rand2 < np.exp(DeltaObjective*10/self.Temp) and DeltaObjective<0:    
+                         self.Best_Sol = candid_Solution
+                         self.Best_Obj = self.Find_Objective_Function(candid_Solution)
+                         self.Objectives = np.append(self.Objectives, np.array([self.Best_Obj]))
+                print("The optimal cost for Temp {} and in Iteration {} is: ".format(self.Temp,iteration+1),self.Best_Obj)
+            self.Temp *= self.Temp_Coeff
+# In[]:
+np.random.seed(seed = 1)
+Sample_Number = 1000
+#Points_Weights np.random.uniform(0,100,size = [Sample_Number, Sample_Number])
+Customers_Locations = np.random.uniform(0,100,size = [Sample_Number, 2]) 
+np.random.seed(seed = 2)
+Candid_Num = 30
+Candid_Points_Loc = np.random.uniform(0,100,size = [Candid_Num, 2])
+min_dist = 30
+Covering_Object = Covering_Optimized_Sa(Iteration = 200, Temp = 1000, Temp_Coeff = 0.90)
+Covering_Object.Fit_covering_Sa(Customers_Locations, Candid_Points_Loc, Noncovering_Cost = 100000, Est_Cost = 100,  min_dist = min_dist)
+Best_Sol = Covering_Object.Best_Sol             
+Objectives = Covering_Object.Objectives 
+# In[]:
+fig, ax = plt.subplots()
+ax.scatter(Customers_Locations[:,0],Customers_Locations[:,1], marker = 'o', c = 'red') 
+ax.scatter(Candid_Points_Loc[Best_Sol==1,0],Candid_Points_Loc[Best_Sol==1,1], marker = 's', c = 'green')
+ax.scatter(Candid_Points_Loc[Best_Sol==0,0],Candid_Points_Loc[Best_Sol==0,1], marker = 'x', c = 'black')
+for candids in range(Candid_Num):
+    if Best_Sol[candids] == 1:
+        cir = plt.Circle((Candid_Points_Loc[candids,0],Candid_Points_Loc[candids,1]), min_dist, color='blue',fill=False)
+        ax.set_aspect('equal', adjustable='datalim')
+        ax.add_patch(cir)
+ax.set_xlim([0,100])
+ax.set_ylim([0,100])
