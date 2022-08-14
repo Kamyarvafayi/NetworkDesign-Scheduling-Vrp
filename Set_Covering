@@ -7,7 +7,6 @@ class Covering_Optimized_Sa:
         self.Iter_Num = Iteration
         self.Temp = Temp
         self.Temp_Coeff = Temp_Coeff
-        
     def Initial_Solution(self):
         self.First_solution = np.random.randint(0,2,size=self.candid.shape[0])
         self.First_solution = np.ones(shape = self.candid.shape[0])
@@ -41,7 +40,6 @@ class Covering_Optimized_Sa:
                 for customer in range(self.Input.shape[0]):
                     if self.Distance[Candid_Loc,customer]<=self.Min_Dist:
                         Covered[customer] = True
-        
         Uncovered_Customers_Count = np.count_nonzero(np.where(Covered ==True, 0,1))
         return Facility_Estabilishment_cost + self.Noncovering_Cost * Uncovered_Customers_Count
     def Fit_covering_Sa(self, Input, Candid_Points, Noncovering_Cost = 100000, Est_Cost = 100,  min_dist = 3):
@@ -77,10 +75,9 @@ class Covering_Optimized_Sa:
                          self.Objectives = np.append(self.Objectives, np.array([self.Best_Obj]))
                 print("The optimal cost for Temp {} and in Iteration {} is: ".format(self.Temp,iteration+1),self.Best_Obj)
             self.Temp *= self.Temp_Coeff
-# In[]:
+# In[]: Object
 np.random.seed(seed = 1)
 Sample_Number = 1000
-#Points_Weights np.random.uniform(0,100,size = [Sample_Number, Sample_Number])
 Customers_Locations = np.random.uniform(0,100,size = [Sample_Number, 2]) 
 np.random.seed(seed = 2)
 Candid_Num = 30
@@ -90,7 +87,7 @@ Covering_Object = Covering_Optimized_Sa(Iteration = 200, Temp = 1000, Temp_Coeff
 Covering_Object.Fit_covering_Sa(Customers_Locations, Candid_Points_Loc, Noncovering_Cost = 100000, Est_Cost = 100,  min_dist = min_dist)
 Best_Sol = Covering_Object.Best_Sol             
 Objectives = Covering_Object.Objectives 
-# In[]:
+# In[]: Graph
 fig, ax = plt.subplots()
 ax.scatter(Customers_Locations[:,0],Customers_Locations[:,1], marker = 'o', c = 'red') 
 ax.scatter(Candid_Points_Loc[Best_Sol==1,0],Candid_Points_Loc[Best_Sol==1,1], marker = 's', c = 'green')
