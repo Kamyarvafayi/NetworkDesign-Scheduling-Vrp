@@ -60,6 +60,15 @@ class Staff_Shift_Scheduling:
         elif New_Solution[Row_Index,Column_Index]<0:
             New_Solution[Row_Index,Column_Index] = 0
         return New_Solution
+    def One_Zero_Mutation(self, Solution):
+        New_Solution = Solution.copy()
+        Column_Index = np.random.randint(0,self.Staff_Num)
+        Row_Index = np.random.randint(0,self.Shift_Num)
+        if New_Solution[Row_Index,Column_Index]<0.5:
+            New_Solution[Row_Index,Column_Index] = 1
+        else:
+            New_Solution[Row_Index,Column_Index] = 0
+        return New_Solution
     def Find_Objective(self, Solution):
         Sol = np.zeros([self.Shift_Num, self.Staff_Num])
         for staff in range(self.Staff_Num):
@@ -83,12 +92,13 @@ class Staff_Shift_Scheduling:
                         else:
                             Sol[shift-1, staff] = 1
         return Sol         
-    def Fit_GA_to_Staff_Work_Scheduling(self, Demand, Staff_Num = 60, Shift_Num = 14, Demand_Violation_Cost = 10000, Staff_Wage = 100):
+    def Fit_GA_to_Staff_Work_Scheduling(self, Demand, Staff_Num = 60, Shift_Num = 14, Demand_Violation_Cost = 10000, Staff_Wage = 100, Cross_Over_ratio = 0.1):
         self.Demand = Demand
         self.Staff_Num = Staff_Num
         self.Shift_Num = Shift_Num
         self.Demand_Violation_Cost = Demand_Violation_Cost
         self.Wage = Staff_Wage
+        self.Cross_Over_ratio = Cross_Over_ratio
         self.Initialization()
         self.Objectives = np.array([self.Find_Objective(self.Initial_Solution[i,:,:]) for i in range(self.Population_Size)])
         self.Population = self.Initial_Solution[np.argsort(self.Objectives),:,:]
@@ -99,25 +109,31 @@ class Staff_Shift_Scheduling:
             Row_Mutation_Solution = self.Population.copy()
             Column_Mutation_Solution = self.Population.copy()
             Mutation_Solution = self.Population.copy()
+            One_Zero_Mutation_Solution = self.Population.copy()
         # Cross_Over
             Cross_Over_Rand = np.random.rand()
             if Cross_Over_Rand>0.5:
                 for i in range(self.Population_Size):
-                    if np.random.rand()>0.9:
+                    if np.random.rand()>1-self.Cross_Over_ratio:
                         for j in range(i+1, self.Population_Size):
                             self.Population = np.append(self.Population, self.Cross_Over_Columns(Column_CrossOVer_Solution[i,:,:], Column_CrossOVer_Solution[j,:,:])[0].reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)
                             self.Population = np.append(self.Population, self.Cross_Over_Columns(Column_CrossOVer_Solution[i,:,:], Column_CrossOVer_Solution[j,:,:])[1].reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)
             else:
                 for i in range(self.Population_Size):
-                    if np.random.rand()>0.9:
+                    if np.random.rand()>self.Cross_Over_ratio:
                         for j in range(i+1, self.Population_Size):
                             self.Population = np.append(self.Population, self.Cross_Over_Rows(Row_CrossOver_Solution[i,:,:], Row_CrossOver_Solution[j,:,:])[0].reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)
                             self.Population = np.append(self.Population, self.Cross_Over_Rows(Row_CrossOver_Solution[i,:,:], Row_CrossOver_Solution[j,:,:])[1].reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)
         # Mutation
-            for j in range(30):
+            for j in range(5):
                 Mutation_Solution = self.Population[0:self.Population_Size]
                 for i in range(self.Population_Size):
                     self.Population = np.append(self.Population, self.Mutation(Mutation_Solution[i,:,:]).reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)    
+        # Make one or zero Mutation
+            for j in range(5):
+                Mutation_Solution = self.Population[0:self.Population_Size]
+                for i in range(self.Population_Size):
+                    self.Population = np.append(self.Population, self.One_Zero_Mutation(One_Zero_Mutation_Solution[i,:,:]).reshape([1,self.Shift_Num, self.Staff_Num]), axis = 0)
         # Row or Column Mutation   
             Mutation_Rand = np.random.rand()
             if Mutation_Rand>0.5:
@@ -136,14 +152,15 @@ class Staff_Shift_Scheduling:
             self.Objectives_Sorted = self.Objectives_Sorted[0:self.Population_Size] 
             print("Objective in Iteration {} is {}.".format(iteration+1, self.Objectives_Sorted[0]))       
 # In[]:
-Staff_Scheduling = Staff_Shift_Scheduling(Iter_Num= 1000, Population_Size=15)
+Staff_Scheduling = Staff_Shift_Scheduling(Iter_Num= 200, Population_Size=15)
 Shift_Number = 14
-Staff_Number = 50
+Staff_Number = 60
 staff_wage = 100
 Demand_Violation_Cost = 1000000
+Cross_Ratio = 0.1
 np.random.seed(seed=1)
-Demand = np.array([np.random.randint(20, 26) for i in range(Shift_Number)])
-Staff_Scheduling.Fit_GA_to_Staff_Work_Scheduling(Demand = Demand, Staff_Num = Staff_Number, Shift_Num = Shift_Number, Demand_Violation_Cost = Demand_Violation_Cost, Staff_Wage = staff_wage)
+Demand = np.array([np.random.randint(15, 20) for i in range(Shift_Number)])
+Staff_Scheduling.Fit_GA_to_Staff_Work_Scheduling(Demand = Demand, Staff_Num = Staff_Number, Shift_Num = Shift_Number, Demand_Violation_Cost = Demand_Violation_Cost, Staff_Wage = staff_wage, Cross_Over_ratio  = Cross_Ratio)
 Initial_Sol = Staff_Scheduling.Initial_Solution
 Objectives = Staff_Scheduling.Objectives_Sorted
 Population = Staff_Scheduling.Population
