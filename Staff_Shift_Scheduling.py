@@ -19,10 +19,6 @@ class Staff_Shift_Scheduling:
     def Cross_Over_Rows(self, Solution1, Solution2):
         New_Solution1 = Solution1.copy()
         New_Solution2 = Solution2.copy()
-#        Cross_Row_Index1 = np.random.randint(0,self.Shift_Num)
-#        temp = New_Solution2[Cross_Row_Index1]
-#        New_Solution2 [Cross_Row_Index1] = New_Solution1[Cross_Row_Index1]
-#        New_Solution1[Cross_Row_Index1] = temp
         Cross_Column_Index = np.random.randint(1,self.Staff_Num)
         Cross_Row_Index1 = np.random.randint(0,self.Shift_Num)
         if Cross_Row_Index1%2==1:
