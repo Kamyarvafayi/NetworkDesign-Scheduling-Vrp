@@ -13,7 +13,7 @@ class Classic_VRP:
         Random_Coeff = np.array([np.random.randint(0,2,size = self.Input.shape[0])])
         return Vehicle1*Random_Coeff + Vehicle2*(1-Random_Coeff), Vehicle2*Random_Coeff + Vehicle1*(1-Random_Coeff)
     def Vehicle_Mutation(self, Vehicle):
-        Mutation_Size = int(max(np.ceil(self.Input.shape[0]/5), 3))
+        Mutation_Size = np.random.randint(1,int(max(np.ceil(self.Input.shape[0]/5), 3)))
         Mutation_Indices = random.sample(range(self.Input.shape[0]), Mutation_Size)
         New_Vehicle = Vehicle.copy()
         for Vehicle_Index in Mutation_Indices:
@@ -32,7 +32,7 @@ class Classic_VRP:
         return City_Order1_Copy , City_Order2_Copy
     def City_Order_Mutation(self, City_Order):
         Mutation_Speed = 0.2
-        Mutation_Size = int(max(np.ceil(self.Input.shape[0]/5), 3))
+        Mutation_Size = np.random.randint(1,int(max(np.ceil(self.Input.shape[0]/5), 3)))
         Mutation_Indices = random.sample(range(self.Input.shape[0]), Mutation_Size)
         New_Order = City_Order.copy()
         for City_Index in Mutation_Indices:
